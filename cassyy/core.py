@@ -6,7 +6,7 @@ import logging
 import urllib.parse
 import urllib.request
 import xml.etree.ElementTree
-from typing import Dict, Optional
+from typing import Dict, Optional, Union
 
 logger = logging.getLogger(__name__)
 
@@ -37,7 +37,7 @@ class CASUser:
     user: str
     attributes: Dict[str, str] = dataclasses.field(default_factory=dict)
 
-    def asdict(self) -> Dict[str, ...]:
+    def asdict(self) -> Dict[str, Union[str, Dict[str, str]]]:
         return dataclasses.asdict(self)
 
 
