@@ -77,10 +77,11 @@ class CASClient:
             ticket: str,
             *,
             timeout: Optional[float] = None,
+            **kwargs
     ) -> CASUser:
-        target_validate = self.build_validate_url(service_url, ticket)
         if timeout is None:
             timeout = self.CAS_VALIDATE_TIMEOUT
+        target_validate = self.build_validate_url(service_url, ticket, **kwargs)
         logger.debug('Validating %s', target_validate)
         try:
             resp_data = _fetch_url(target_validate, timeout=timeout)
@@ -106,10 +107,9 @@ class CASClient:
 
     def build_logout_url(self, service: Optional[str] = None, **kwargs) -> str:
         if service is None:
-            if kwargs:
-                params = kwargs
-            else:
+            if not kwargs:
                 return self.logout_url
+            params = kwargs
         else:
             params = {'service': service, **kwargs}
         qs = urllib.parse.urlencode(params)
