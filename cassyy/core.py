@@ -164,7 +164,6 @@ class CASClient:
             'CASClient('
             f'login_url={self.login_url!r}, '
             f'logout_url={self.logout_url!r}, '
-            f'validate_url={self.validate_url!r}, '
-            f'timeout={self.timeout!r}'
+            f'validate_url={self.validate_url!r}'
             ')'
         )
