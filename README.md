@@ -1,17 +1,19 @@
 # cassyy
 
-A simple Apereo Central Authentication Service (CAS) client.  It uses the
+A simple Apereo Central Authentication Service (CAS) client that provides basic
+support for validating service tickets using CAS Protocols 2/3. It uses the
 Python standard library `urllib.request` module and has no external
 dependencies.
 
 # Usage
 
-Below provides just an example of how it might be used it in a web
+Below provides just an example of how it might be used in a web
 application. The example is generic and does not represent any specific web
 framework. It is up to the application to decide what `service_url` it will
 use with the `build_login_url` method. It is common to use the current request
 url or a fixed url that CAS will redirect the user to after the login is
-successful.
+successful along with a `ticket` that can be validated to retrieve information
+about the user.
 
 ```python
 import cassyy
