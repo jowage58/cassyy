@@ -44,19 +44,17 @@ class CASUser:
 class CASClient:
     CAS_NS = {'cas': 'http://www.yale.edu/tp/cas'}
     CAS_VALIDATE_ENCODING = 'utf-8'
+    CAS_VALIDATE_TIMEOUT = 10.0
 
     def __init__(
             self,
             login_url: str,
             logout_url: str,
             validate_url: str,
-            *,
-            timeout: float = 10.0,
     ) -> None:
         self.login_url = login_url
         self.logout_url = logout_url
         self.validate_url = validate_url
-        self.timeout = timeout
 
     @classmethod
     def from_base_url(
@@ -66,13 +64,11 @@ class CASClient:
             login_path: str = '/login',
             logout_path: str = '/logout',
             validate_path: str = '/p3/serviceValidate',
-            timeout: float = 10.0,
     ) -> 'CASClient':
         return cls(
             login_url=urllib.parse.urljoin(base_url, login_path),
             logout_url=urllib.parse.urljoin(base_url, logout_path),
             validate_url=urllib.parse.urljoin(base_url, validate_path),
-            timeout=timeout,
         )
 
     def validate(
@@ -84,7 +80,7 @@ class CASClient:
     ) -> CASUser:
         target_validate = self.build_validate_url(service_url, ticket)
         if timeout is None:
-            timeout = self.timeout
+            timeout = self.CAS_VALIDATE_TIMEOUT
         logger.debug('Validating %s', target_validate)
         try:
             resp_data = _fetch_url(target_validate, timeout=timeout)
