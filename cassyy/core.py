@@ -11,7 +11,7 @@ from typing import Dict, Optional, Union
 logger = logging.getLogger(__name__)
 
 
-def _fetch_url(url: str, timeout: float = 10.0) -> str:
+def _fetch_url(url: str, timeout: float = 10.0) -> bytes:
     with urllib.request.urlopen(url, timeout=timeout) as f:
         return f.read()
 
@@ -43,6 +43,7 @@ class CASUser:
 
 class CASClient:
     CAS_NS = {'cas': 'http://www.yale.edu/tp/cas'}
+    CAS_VALIDATE_ENCODING = 'utf-8'
 
     def __init__(
             self,
@@ -86,12 +87,13 @@ class CASClient:
             timeout = self.timeout
         logger.debug('Validating %s', target_validate)
         try:
-            cas_response = _fetch_url(target_validate, timeout=timeout)
+            resp_data = _fetch_url(target_validate, timeout=timeout)
+            resp_text = resp_data.decode(self.CAS_VALIDATE_ENCODING)
         except Exception as exc:
             raise CASError(repr(exc))
         else:
-            logger.debug('Response:\n%s', cas_response)
-            return self.parse_cas_response(cas_response)
+            logger.debug('Response:\n%s', resp_text)
+            return self.parse_cas_response(resp_text)
 
     def build_login_url(
             self,
