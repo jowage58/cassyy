@@ -36,7 +36,7 @@ class CASClientTestCase(unittest.TestCase):
         self.assertEqual(c.logout_url, 'https://cas.local/bar/baz')
         self.assertEqual(c.validate_url, 'https://cas.local/qux')
 
-    def test_parse_username(self):
+    def test_parse_userid(self):
         s = """
         <cas:serviceResponse xmlns:cas='http://www.yale.edu/tp/cas'>
             <cas:authenticationSuccess>
@@ -44,7 +44,7 @@ class CASClientTestCase(unittest.TestCase):
             </cas:authenticationSuccess>
         </cas:serviceResponse>
         """
-        self.assertEqual('jdoe', self.client.parse_cas_response(s).user)
+        self.assertEqual('jdoe', self.client.parse_cas_response(s).userid)
 
     def test_parse_non_xml(self):
         s = "jdoe"
@@ -89,7 +89,7 @@ class CASClientTestCase(unittest.TestCase):
     def test_build_login_url_with_postback(self):
         url = self.client.build_login_url(self.test_service_url, callback_post=True)
         self.assertEqual(
-            f'{self.cas_login_url}?method=POST&service=https%3A%2F%2Ffoo.org',
+            f'{self.cas_login_url}?service=https%3A%2F%2Ffoo.org&method=POST',
             url
         )
 
@@ -131,7 +131,7 @@ class CASClientTestCase(unittest.TestCase):
             </cas:serviceResponse>
         """
         cas_user = self.client.parse_cas_response(s)
-        self.assertEqual('jdoe', cas_user.user)
+        self.assertEqual('jdoe', cas_user.userid)
         self.assertEqual('jdoe@foo.org', cas_user.attributes['mail'])
         self.assertEqual('Jane Doe', cas_user.attributes['cn'])
         self.assertEqual('10.0.0.2', cas_user.attributes['clientIpAddress'])

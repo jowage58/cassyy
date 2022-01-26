@@ -34,7 +34,7 @@ class CASInvalidTicketError(CASError):
 
 @dataclasses.dataclass
 class CASUser:
-    user: str
+    userid: str
     attributes: Dict[str, str] = dataclasses.field(default_factory=dict)
 
     def asdict(self) -> Dict[str, Union[str, Dict[str, str]]]:
@@ -96,20 +96,29 @@ class CASClient:
             service: str,
             *,
             callback_post: bool = False,
+            **kwargs,
     ) -> str:
-        encoded_service = urllib.parse.quote_plus(service)
-        method = 'method=POST&' if callback_post else ''
-        return f'{self.login_url}?{method}service={encoded_service}'
+        params = {'service': service, **kwargs}
+        if callback_post:
+            params['method'] = 'POST'
+        qs = urllib.parse.urlencode(params)
+        return f'{self.login_url}?{qs}'
 
-    def build_logout_url(self, service: Optional[str] = None) -> str:
+    def build_logout_url(self, service: Optional[str] = None, **kwargs) -> str:
         if service is None:
-            return self.logout_url
-        encoded_service = urllib.parse.quote_plus(service)
-        return f'{self.logout_url}?service={encoded_service}'
+            if kwargs:
+                params = kwargs
+            else:
+                return self.logout_url
+        else:
+            params = {'service': service, **kwargs}
+        qs = urllib.parse.urlencode(params)
+        return f'{self.logout_url}?{qs}'
 
-    def build_validate_url(self, service: str, ticket: str) -> str:
-        encoded_service = urllib.parse.quote_plus(service)
-        return f'{self.validate_url}?service={encoded_service}&ticket={ticket}'
+    def build_validate_url(self, service: str, ticket: str, **kwargs) -> str:
+        params = {'service': service, 'ticket': ticket, **kwargs}
+        qs = urllib.parse.urlencode(params)
+        return f'{self.validate_url}?{qs}'
 
     def parse_cas_response(self, cas_response: str) -> CASUser:
         try:
@@ -133,16 +142,13 @@ class CASClient:
             user_elem: xml.etree.ElementTree.Element,
             attr_elem: Optional[xml.etree.ElementTree.Element],
     ) -> CASUser:
-        user = user_elem.text
+        cas_user = CASUser(userid=user_elem.text)
         if attr_elem is not None:
             tag_ns = '{' + self.CAS_NS['cas'] + '}'
-            user_attrs = {
-                e.tag.replace(tag_ns, '', 1): e.text
-                for e in attr_elem
-            }
-        else:
-            user_attrs = {}
-        return CASUser(user=user, attributes=user_attrs)
+            for e in attr_elem:
+                attr_name = e.tag.replace(tag_ns, '', 1)
+                cas_user.attributes[attr_name] = e.text
+        return cas_user
 
     def parse_cas_xml_error(
             self,
