@@ -1,5 +1,5 @@
 """
-CASsy - A simple Apereo Central Authentication Service (CAS) client.
+Simple Apereo Central Authentication Service (CAS) client
 """
 import logging as _logging
 

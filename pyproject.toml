@@ -1,0 +1,21 @@
+[build-system]
+requires = ["flit_core >=3.2,<4"]
+build-backend = "flit_core.buildapi"
+
+[project]
+name = "cassyy"
+authors = [{name = "John Wagenleitner", email = "johnwa@mail.fresnostate.edu"}]
+readme = "README.md"
+license = {file = "LICENSE"}
+keywords = ["Authentication", "SSO", "CAS"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "License :: OSI Approved :: Apache Software License",
+    "Intended Audience :: Developers",
+]
+requires-python = ">=3.8"
+dynamic = ["version", "description"]
+
+[project.urls]
+Home = "https://github.com/jowage58/cassyy"
+Source = "https://github.com/jowage58/cassyy"
