@@ -1,4 +1,4 @@
-# CASssy
+# cassyy
 
 A simple Apereo Central Authentication Service (CAS) client.  It uses the
 Python standard library `urllib.request` module and has no external
