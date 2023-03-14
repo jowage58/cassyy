@@ -37,7 +37,7 @@ def validate_route(request, response):
 def logout_route(request, response):
     # where to have CAS redirect back to the app after the CAS logout occurs,
     # or None to use the CAS logout page
-    service_url = ...  
+    service_url = ...
     target_url = cas_client.build_logout_url(service_url)
     response.redirect(target_url)
 ```

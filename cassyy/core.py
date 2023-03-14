@@ -6,7 +6,7 @@ import logging
 import urllib.parse
 import urllib.request
 import xml.etree.ElementTree
-from typing import Dict, Optional, Union
+from typing import Optional, Union
 
 logger = logging.getLogger(__name__)
 
@@ -35,9 +35,9 @@ class CASInvalidTicketError(CASError):
 @dataclasses.dataclass
 class CASUser:
     userid: str
-    attributes: Dict[str, str] = dataclasses.field(default_factory=dict)
+    attributes: dict[str, str] = dataclasses.field(default_factory=dict)
 
-    def asdict(self) -> Dict[str, Union[str, Dict[str, str]]]:
+    def asdict(self) -> dict[str, Union[str, dict[str, str]]]:
         return dataclasses.asdict(self)
 
 
@@ -87,7 +87,7 @@ class CASClient:
             resp_data = _fetch_url(target_validate, timeout=timeout)
             resp_text = resp_data.decode(self.CAS_VALIDATE_ENCODING)
         except Exception as exc:
-            raise CASError(repr(exc))
+            raise CASError(repr(exc)) from exc
         else:
             logger.debug("Response:\n%s", resp_text)
             return self.parse_cas_response(resp_text)
@@ -136,6 +136,7 @@ class CASClient:
             )
             return self.parse_cas_xml_user(user_elem, attr_elem)
         self.parse_cas_xml_error(root)
+        return None
 
     def parse_cas_xml_user(
         self,
@@ -161,7 +162,7 @@ class CASClient:
             error_text = error_elem.text
             if error_code == "INVALID_TICKET":
                 raise CASInvalidTicketError(error_code, error_text)
-            elif error_code == "INVALID_SERVICE":
+            if error_code == "INVALID_SERVICE":
                 raise CASInvalidServiceError(error_code, error_text)
         raise CASError(error_code)
 
