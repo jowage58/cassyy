@@ -9,7 +9,7 @@ readme = "README.md"
 license = {file = "LICENSE"}
 keywords = ["Authentication", "SSO", "CAS"]
 classifiers = [
-    "Development Status :: 3 - Beta",
+    "Development Status :: 4 - Beta",
     "License :: OSI Approved :: Apache Software License",
     "Intended Audience :: Developers",
 ]
