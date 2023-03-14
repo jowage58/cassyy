@@ -6,36 +6,36 @@ import logging
 import urllib.parse
 import urllib.request
 import xml.etree.ElementTree
-from typing import Optional, Union
+from typing import Optional, Union, cast
 
 logger = logging.getLogger(__name__)
 
 
 def _fetch_url(url: str, timeout: float = 10.0) -> bytes:
     with urllib.request.urlopen(url, timeout=timeout) as f:
-        return f.read()
+        return cast(bytes, f.read())
 
 
 class CASError(Exception):
-    def __init__(self, error_code: str, *args) -> None:
+    def __init__(self, error_code: str, *args: Optional[str]) -> None:
         super().__init__(error_code, *args)
         self.error_code = error_code
 
 
 class CASInvalidServiceError(CASError):
-    def __init__(self, error_code: str, *args) -> None:
+    def __init__(self, error_code: str, *args: Optional[str]) -> None:
         super().__init__(error_code, *args)
 
 
 class CASInvalidTicketError(CASError):
-    def __init__(self, error_code: str, *args) -> None:
+    def __init__(self, error_code: str, *args: Optional[str]) -> None:
         super().__init__(error_code, *args)
 
 
 @dataclasses.dataclass
 class CASUser:
     userid: str
-    attributes: dict[str, str] = dataclasses.field(default_factory=dict)
+    attributes: dict[str, Optional[str]] = dataclasses.field(default_factory=dict)
 
     def asdict(self) -> dict[str, Union[str, dict[str, str]]]:
         return dataclasses.asdict(self)
@@ -77,7 +77,7 @@ class CASClient:
         ticket: str,
         *,
         timeout: Optional[float] = None,
-        **kwargs,
+        **kwargs: str,
     ) -> CASUser:
         if timeout is None:
             timeout = self.CAS_VALIDATE_TIMEOUT
@@ -97,7 +97,7 @@ class CASClient:
         service: str,
         *,
         callback_post: bool = False,
-        **kwargs,
+        **kwargs: str,
     ) -> str:
         params = {"service": service, **kwargs}
         if callback_post:
@@ -105,7 +105,7 @@ class CASClient:
         qs = urllib.parse.urlencode(params)
         return f"{self.login_url}?{qs}"
 
-    def build_logout_url(self, service: Optional[str] = None, **kwargs) -> str:
+    def build_logout_url(self, service: Optional[str] = None, **kwargs: str) -> str:
         if service is None:
             if not kwargs:
                 return self.logout_url
@@ -115,7 +115,7 @@ class CASClient:
         qs = urllib.parse.urlencode(params)
         return f"{self.logout_url}?{qs}"
 
-    def build_validate_url(self, service: str, ticket: str, **kwargs) -> str:
+    def build_validate_url(self, service: str, ticket: str, **kwargs: str) -> str:
         params = {"service": service, "ticket": ticket, **kwargs}
         qs = urllib.parse.urlencode(params)
         return f"{self.validate_url}?{qs}"
@@ -135,14 +135,15 @@ class CASClient:
                 "cas:authenticationSuccess/cas:attributes", self.CAS_NS
             )
             return self.parse_cas_xml_user(user_elem, attr_elem)
-        self.parse_cas_xml_error(root)
-        return None
+        raise self.parse_cas_xml_error(root)
 
     def parse_cas_xml_user(
         self,
         user_elem: xml.etree.ElementTree.Element,
         attr_elem: Optional[xml.etree.ElementTree.Element],
     ) -> CASUser:
+        if user_elem.text is None:
+            raise CASError("USERNAME_NOT_IN_RESPONSE")
         cas_user = CASUser(userid=user_elem.text)
         if attr_elem is not None:
             tag_ns = "{" + self.CAS_NS["cas"] + "}"
@@ -154,17 +155,17 @@ class CASClient:
     def parse_cas_xml_error(
         self,
         root: xml.etree.ElementTree.Element,
-    ) -> None:
+    ) -> CASError:
         error_code = "Unknown"
         error_elem = root.find("cas:authenticationFailure", self.CAS_NS)
         if error_elem is not None:
             error_code = error_elem.attrib.get("code", error_code)
             error_text = error_elem.text
             if error_code == "INVALID_TICKET":
-                raise CASInvalidTicketError(error_code, error_text)
+                return CASInvalidTicketError(error_code, error_text)
             if error_code == "INVALID_SERVICE":
-                raise CASInvalidServiceError(error_code, error_text)
-        raise CASError(error_code)
+                return CASInvalidServiceError(error_code, error_text)
+        return CASError(error_code)
 
     def __repr__(self) -> str:
         return (
