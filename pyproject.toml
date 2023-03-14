@@ -1,5 +1,5 @@
 [build-system]
-requires = ["flit_core >=3.2,<4"]
+requires = ["flit_core >=3.8,<4"]
 build-backend = "flit_core.buildapi"
 
 [project]
@@ -9,13 +9,54 @@ readme = "README.md"
 license = {file = "LICENSE"}
 keywords = ["Authentication", "SSO", "CAS"]
 classifiers = [
-    "Development Status :: 3 - Alpha",
+    "Development Status :: 3 - Beta",
     "License :: OSI Approved :: Apache Software License",
     "Intended Audience :: Developers",
 ]
-requires-python = ">=3.8"
+requires-python = ">=3.10"
 dynamic = ["version", "description"]
 
 [project.urls]
 Home = "https://github.com/jowage58/cassyy"
 Source = "https://github.com/jowage58/cassyy"
+
+[tool.black]
+target-version = ["py310"]
+
+[tool.mypy]
+packages = "cassyy"
+strict = true
+warn_unreachable = true
+
+[tool.ruff]
+target-version = "py310"
+line-length = 88
+extend-exclude = [".*", "dist"]
+extend-select = [
+    "A",  # builtins
+    "ARG",  # unused args
+    "B",  # flake8-bugbear
+    "C40",  # comprehensions
+    "DTZ", # datetimez
+    "E",  # pycodestyle (errors)
+    "ERA",  # eradicate commented out code
+    "F",  # Pyflakes
+    "G",  # logging format
+    "I",   # isort
+    "ISC",  # implicit string concat
+    "N",  # pep8 naming
+    "PIE",  # misc lints
+    "PL",  # Pylint
+    "PTH",  # pathlib
+    "Q",  # quotes
+    "RET",  # returns
+    "RSE",  # raises
+    "RUF",  # ruff rules
+    "S",  # flake8-bandit
+    "SIM",  # simplify
+    "T20",  # flake8-print
+    "TRY",  # tryceratops
+    "UP",  # pyupgrade
+    "W",  # pycodestyle (warnings)
+    "YTT",  # flake8-2020
+]
