@@ -11,14 +11,14 @@ from .core import (
     CASUser,
 )
 
-__version__ = '0.0.6'
+__version__ = "0.0.6"
 
 __all__ = [
-    'CASClient',
-    'CASUser',
-    'CASError',
-    'CASInvalidServiceError',
-    'CASInvalidTicketError',
+    "CASClient",
+    "CASUser",
+    "CASError",
+    "CASInvalidServiceError",
+    "CASInvalidTicketError",
 ]
 
 _logging.getLogger(__name__).addHandler(_logging.NullHandler())
