@@ -13,7 +13,7 @@ classifiers = [
     "License :: OSI Approved :: Apache Software License",
     "Intended Audience :: Developers",
 ]
-requires-python = ">=3.10"
+requires-python = ">=3.9"
 dynamic = ["version", "description"]
 
 [project.urls]
@@ -21,7 +21,7 @@ Home = "https://github.com/jowage58/cassyy"
 Source = "https://github.com/jowage58/cassyy"
 
 [tool.black]
-target-version = ["py310"]
+target-version = ["py39"]
 
 [tool.mypy]
 packages = "cassyy"
@@ -29,7 +29,7 @@ strict = true
 warn_unreachable = true
 
 [tool.ruff]
-target-version = "py310"
+target-version = "py39"
 line-length = 88
 extend-exclude = [".*", "dist"]
 extend-select = [
