@@ -10,6 +10,10 @@ from typing import Optional, Union, cast
 
 logger = logging.getLogger(__name__)
 
+CAS_NS = {"cas": "http://www.yale.edu/tp/cas"}
+CAS_VALIDATE_ENCODING = "utf-8"
+CAS_VALIDATE_TIMEOUT = 10.0
+
 
 def _fetch_url(url: str, timeout: float = 10.0) -> bytes:
     with urllib.request.urlopen(url, timeout=timeout) as f:
@@ -42,10 +46,6 @@ class CASUser:
 
 
 class CASClient:
-    CAS_NS = {"cas": "http://www.yale.edu/tp/cas"}
-    CAS_VALIDATE_ENCODING = "utf-8"
-    CAS_VALIDATE_TIMEOUT = 10.0
-
     def __init__(
         self,
         login_url: str,
@@ -80,17 +80,17 @@ class CASClient:
         **kwargs: str,
     ) -> CASUser:
         if timeout is None:
-            timeout = self.CAS_VALIDATE_TIMEOUT
+            timeout = CAS_VALIDATE_TIMEOUT
         target_validate = self.build_validate_url(service_url, ticket, **kwargs)
         logger.debug("Validating %s", target_validate)
         try:
             resp_data = _fetch_url(target_validate, timeout=timeout)
-            resp_text = resp_data.decode(self.CAS_VALIDATE_ENCODING)
+            resp_text = resp_data.decode(CAS_VALIDATE_ENCODING)
         except Exception as exc:
             raise CASError(repr(exc)) from exc
         else:
             logger.debug("Response:\n%s", resp_text)
-            return self.parse_cas_response(resp_text)
+            return parse_cas_response(resp_text)
 
     def build_login_url(
         self,
@@ -120,53 +120,6 @@ class CASClient:
         qs = urllib.parse.urlencode(params)
         return f"{self.validate_url}?{qs}"
 
-    def parse_cas_response(self, cas_response: str) -> CASUser:
-        try:
-            root = xml.etree.ElementTree.fromstring(cas_response)
-        except Exception as exc:
-            raise CASError("INVALID_RESPONSE", repr(exc)) from exc
-        else:
-            return self.parse_cas_xml(root)
-
-    def parse_cas_xml(self, root: xml.etree.ElementTree.Element) -> CASUser:
-        user_elem = root.find("cas:authenticationSuccess/cas:user", self.CAS_NS)
-        if user_elem is not None:
-            attr_elem = root.find(
-                "cas:authenticationSuccess/cas:attributes", self.CAS_NS
-            )
-            return self.parse_cas_xml_user(user_elem, attr_elem)
-        raise self.parse_cas_xml_error(root)
-
-    def parse_cas_xml_user(
-        self,
-        user_elem: xml.etree.ElementTree.Element,
-        attr_elem: Optional[xml.etree.ElementTree.Element],
-    ) -> CASUser:
-        if user_elem.text is None:
-            raise CASError("USERNAME_NOT_IN_RESPONSE")
-        cas_user = CASUser(userid=user_elem.text)
-        if attr_elem is not None:
-            tag_ns = "{" + self.CAS_NS["cas"] + "}"
-            for e in attr_elem:
-                attr_name = e.tag.replace(tag_ns, "", 1)
-                cas_user.attributes[attr_name] = e.text
-        return cas_user
-
-    def parse_cas_xml_error(
-        self,
-        root: xml.etree.ElementTree.Element,
-    ) -> CASError:
-        error_code = "Unknown"
-        error_elem = root.find("cas:authenticationFailure", self.CAS_NS)
-        if error_elem is not None:
-            error_code = error_elem.attrib.get("code", error_code)
-            error_text = error_elem.text
-            if error_code == "INVALID_TICKET":
-                return CASInvalidTicketError(error_code, error_text)
-            if error_code == "INVALID_SERVICE":
-                return CASInvalidServiceError(error_code, error_text)
-        return CASError(error_code)
-
     def __repr__(self) -> str:
         return (
             "CASClient("
@@ -175,3 +128,48 @@ class CASClient:
             f"validate_url={self.validate_url!r}"
             ")"
         )
+
+
+def parse_cas_response(cas_response: str) -> CASUser:
+    try:
+        root = xml.etree.ElementTree.fromstring(cas_response)
+    except Exception as exc:
+        raise CASError("INVALID_RESPONSE", repr(exc)) from exc
+    else:
+        return parse_cas_xml(root)
+
+
+def parse_cas_xml(root: xml.etree.ElementTree.Element) -> CASUser:
+    user_elem = root.find("cas:authenticationSuccess/cas:user", CAS_NS)
+    if user_elem is not None:
+        attr_elem = root.find("cas:authenticationSuccess/cas:attributes", CAS_NS)
+        return parse_cas_xml_user(user_elem, attr_elem)
+    raise parse_cas_xml_error(root)
+
+
+def parse_cas_xml_user(
+    user_elem: xml.etree.ElementTree.Element,
+    attr_elem: Optional[xml.etree.ElementTree.Element],
+) -> CASUser:
+    if user_elem.text is None:
+        raise CASError("USERNAME_NOT_IN_RESPONSE")
+    cas_user = CASUser(userid=user_elem.text)
+    if attr_elem is not None:
+        tag_ns = "{" + CAS_NS["cas"] + "}"
+        for e in attr_elem:
+            attr_name = e.tag.replace(tag_ns, "", 1)
+            cas_user.attributes[attr_name] = e.text
+    return cas_user
+
+
+def parse_cas_xml_error(root: xml.etree.ElementTree.Element) -> CASError:
+    error_code = "Unknown"
+    error_elem = root.find("cas:authenticationFailure", CAS_NS)
+    if error_elem is not None:
+        error_code = error_elem.attrib.get("code", error_code)
+        error_text = error_elem.text
+        if error_code == "INVALID_TICKET":
+            return CASInvalidTicketError(error_code, error_text)
+        if error_code == "INVALID_SERVICE":
+            return CASInvalidServiceError(error_code, error_text)
+    return CASError(error_code)

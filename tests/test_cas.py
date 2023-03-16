@@ -1,10 +1,11 @@
 import unittest
 
-from cassyy import (
+from cassyy.core import (
     CASClient,
     CASError,
     CASInvalidServiceError,
     CASInvalidTicketError,
+    parse_cas_response,
 )
 
 
@@ -44,12 +45,12 @@ class CASClientTestCase(unittest.TestCase):
             </cas:authenticationSuccess>
         </cas:serviceResponse>
         """
-        self.assertEqual("jdoe", self.client.parse_cas_response(s).userid)
+        self.assertEqual("jdoe", parse_cas_response(s).userid)
 
     def test_parse_non_xml(self):
         s = "jdoe"
         with self.assertRaises(CASError) as cm:
-            self.client.parse_cas_response(s)
+            parse_cas_response(s)
         self.assertEqual("INVALID_RESPONSE", cm.exception.error_code)
         self.assertEqual(
             "ParseError('syntax error: line 1, column 0')", str(cm.exception.args[1])
@@ -64,7 +65,7 @@ class CASClientTestCase(unittest.TestCase):
         </cas:serviceResponse>
         """
         with self.assertRaises(CASInvalidTicketError) as cm:
-            self.client.parse_cas_response(s)
+            parse_cas_response(s)
         self.assertEqual("INVALID_TICKET", cm.exception.error_code)
 
     def test_parse_invalid_service(self):
@@ -77,7 +78,7 @@ class CASClientTestCase(unittest.TestCase):
         </cas:serviceResponse>
         """
         with self.assertRaises(CASInvalidServiceError) as cm:
-            self.client.parse_cas_response(s)
+            parse_cas_response(s)
         self.assertEqual("INVALID_SERVICE", cm.exception.error_code)
 
     def test_build_login_url(self):
@@ -123,7 +124,7 @@ class CASClientTestCase(unittest.TestCase):
                 </cas:authenticationSuccess>
             </cas:serviceResponse>
         """
-        cas_user = self.client.parse_cas_response(s)
+        cas_user = parse_cas_response(s)
         self.assertEqual("jdoe", cas_user.userid)
         self.assertEqual("jdoe@foo.org", cas_user.attributes["mail"])
         self.assertEqual("Jane Doe", cas_user.attributes["cn"])
