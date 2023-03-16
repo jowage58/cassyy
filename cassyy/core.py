@@ -27,13 +27,13 @@ class CASError(Exception):
 
 
 class CASInvalidServiceError(CASError):
-    def __init__(self, error_code: str, *args: Optional[str]) -> None:
-        super().__init__(error_code, *args)
+    def __init__(self, *args: Optional[str]) -> None:
+        super().__init__("INVALID_SERVICE", *args)
 
 
 class CASInvalidTicketError(CASError):
-    def __init__(self, error_code: str, *args: Optional[str]) -> None:
-        super().__init__(error_code, *args)
+    def __init__(self, *args: Optional[str]) -> None:
+        super().__init__("INVALID_TICKET", *args)
 
 
 @dataclasses.dataclass
@@ -232,9 +232,9 @@ def parse_cas_xml_error(root: xml.etree.ElementTree.Element) -> CASError:
         error_code = error_elem.attrib.get("code", error_code)
         error_text = error_elem.text
         if error_code == "INVALID_TICKET":
-            return CASInvalidTicketError(error_code, error_text)
+            return CASInvalidTicketError(error_text)
         if error_code == "INVALID_SERVICE":
-            return CASInvalidServiceError(error_code, error_text)
+            return CASInvalidServiceError(error_text)
     return CASError(error_code)
 
 
