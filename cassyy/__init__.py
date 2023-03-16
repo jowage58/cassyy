@@ -4,6 +4,7 @@ Simple Apereo Central Authentication Service (CAS) client
 import logging as _logging
 
 from .core import (
+    AsyncCASClient,
     CASClient,
     CASError,
     CASInvalidServiceError,
@@ -14,6 +15,7 @@ from .core import (
 __version__ = "0.0.7.dev"
 
 __all__ = [
+    "AsyncCASClient",
     "CASClient",
     "CASUser",
     "CASError",

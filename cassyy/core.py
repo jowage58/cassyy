@@ -1,13 +1,14 @@
 """
 Central Authentication Service (CAS) client
 """
+import asyncio
 import dataclasses
 import logging
 import urllib.parse
 import urllib.request
 import xml.etree.ElementTree
-from collections.abc import Callable
-from typing import Optional, Union
+from collections.abc import Awaitable, Callable
+from typing import Optional, Union, cast
 
 logger = logging.getLogger(__name__)
 
@@ -16,6 +17,7 @@ CAS_VALIDATE_ENCODING = "utf-8"
 CAS_VALIDATE_TIMEOUT = 10.0
 
 HTTPGetFunc = Callable[[str, float], str]
+AsyncHTTPGetFunc = Callable[[str, float], Awaitable[str]]
 
 
 class CASError(Exception):
@@ -96,7 +98,10 @@ class CASClient(BaseCASClient):
         http_get_func: Optional[HTTPGetFunc] = None,
     ) -> None:
         super().__init__(login_url, logout_url, validate_url)
-        self._http_get = http_get_func if http_get_func is not None else _http_get
+        if http_get_func is None:
+            self._http_get = cast(HTTPGetFunc, _http_get)
+        else:
+            self._http_get = http_get_func
 
     @classmethod
     def from_base_url(
@@ -129,6 +134,58 @@ class CASClient(BaseCASClient):
         logger.debug("Validating %s", target_validate)
         try:
             resp_text = self._http_get(target_validate, timeout)
+        except Exception as exc:
+            raise CASError(repr(exc)) from exc
+        else:
+            logger.debug("Response:\n%s", resp_text)
+            return parse_cas_response(resp_text)
+
+
+class AsyncCASClient(BaseCASClient):
+    def __init__(
+        self,
+        login_url: str,
+        logout_url: str,
+        validate_url: str,
+        http_get_func: Optional[AsyncHTTPGetFunc] = None,
+    ) -> None:
+        super().__init__(login_url, logout_url, validate_url)
+        if http_get_func is None:
+            self._http_get = cast(AsyncHTTPGetFunc, _async_http_get)
+        else:
+            self._http_get = http_get_func
+
+    @classmethod
+    def from_base_url(
+        cls,
+        base_url: str,
+        *,
+        login_path: str = "/login",
+        logout_path: str = "/logout",
+        validate_path: str = "/p3/serviceValidate",
+        http_get_func: Optional[AsyncHTTPGetFunc] = None,
+    ) -> "AsyncCASClient":
+        return cls(
+            login_url=urllib.parse.urljoin(base_url, login_path),
+            logout_url=urllib.parse.urljoin(base_url, logout_path),
+            validate_url=urllib.parse.urljoin(base_url, validate_path),
+            http_get_func=http_get_func,
+        )
+
+    async def validate(
+        self,
+        service_url: str,
+        ticket: str,
+        *,
+        timeout: Optional[float] = None,
+        **kwargs: str,
+    ) -> CASUser:
+        if timeout is None:
+            timeout = CAS_VALIDATE_TIMEOUT
+        target_validate = self.build_validate_url(service_url, ticket, **kwargs)
+        logger.debug("Validating %s", target_validate)
+        try:
+            resp_text = await self._http_get(target_validate, timeout)
         except Exception as exc:
             raise CASError(repr(exc)) from exc
         else:
@@ -183,4 +240,10 @@ def parse_cas_xml_error(root: xml.etree.ElementTree.Element) -> CASError:
 
 def _http_get(url: str, timeout: float = 10.0) -> str:
     with urllib.request.urlopen(url, timeout=timeout) as f:
-        return f.read().decode(CAS_VALIDATE_ENCODING)
+        data = cast(bytes, f.read())
+        return data.decode(CAS_VALIDATE_ENCODING)
+
+
+async def _async_http_get(url: str, timeout: float = 10.0) -> str:
+    fut = asyncio.to_thread(_http_get, url, timeout)
+    return await asyncio.wait_for(fut, timeout)
