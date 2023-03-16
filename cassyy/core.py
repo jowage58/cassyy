@@ -6,7 +6,8 @@ import logging
 import urllib.parse
 import urllib.request
 import xml.etree.ElementTree
-from typing import Optional, Union, cast
+from collections.abc import Callable
+from typing import Optional, Union
 
 logger = logging.getLogger(__name__)
 
@@ -14,10 +15,7 @@ CAS_NS = {"cas": "http://www.yale.edu/tp/cas"}
 CAS_VALIDATE_ENCODING = "utf-8"
 CAS_VALIDATE_TIMEOUT = 10.0
 
-
-def _fetch_url(url: str, timeout: float = 10.0) -> bytes:
-    with urllib.request.urlopen(url, timeout=timeout) as f:
-        return cast(bytes, f.read())
+HTTPGetFunc = Callable[[str, float], str]
 
 
 class CASError(Exception):
@@ -79,6 +77,15 @@ class BaseCASClient:
         qs = urllib.parse.urlencode(params)
         return f"{self.validate_url}?{qs}"
 
+    def __repr__(self) -> str:
+        return (
+            f"{self.__class__.__name__}("
+            f"login_url={self.login_url!r}, "
+            f"logout_url={self.logout_url!r}, "
+            f"validate_url={self.validate_url!r}"
+            ")"
+        )
+
 
 class CASClient(BaseCASClient):
     def __init__(
@@ -86,8 +93,27 @@ class CASClient(BaseCASClient):
         login_url: str,
         logout_url: str,
         validate_url: str,
+        http_get_func: Optional[HTTPGetFunc] = None,
     ) -> None:
         super().__init__(login_url, logout_url, validate_url)
+        self._http_get = http_get_func if http_get_func is not None else _http_get
+
+    @classmethod
+    def from_base_url(
+        cls,
+        base_url: str,
+        *,
+        login_path: str = "/login",
+        logout_path: str = "/logout",
+        validate_path: str = "/p3/serviceValidate",
+        http_get_func: Optional[HTTPGetFunc] = None,
+    ) -> "CASClient":
+        return cls(
+            login_url=urllib.parse.urljoin(base_url, login_path),
+            logout_url=urllib.parse.urljoin(base_url, logout_path),
+            validate_url=urllib.parse.urljoin(base_url, validate_path),
+            http_get_func=http_get_func,
+        )
 
     def validate(
         self,
@@ -102,37 +128,12 @@ class CASClient(BaseCASClient):
         target_validate = self.build_validate_url(service_url, ticket, **kwargs)
         logger.debug("Validating %s", target_validate)
         try:
-            resp_data = _fetch_url(target_validate, timeout=timeout)
-            resp_text = resp_data.decode(CAS_VALIDATE_ENCODING)
+            resp_text = self._http_get(target_validate, timeout)
         except Exception as exc:
             raise CASError(repr(exc)) from exc
         else:
             logger.debug("Response:\n%s", resp_text)
             return parse_cas_response(resp_text)
-
-    @classmethod
-    def from_base_url(
-        cls,
-        base_url: str,
-        *,
-        login_path: str = "/login",
-        logout_path: str = "/logout",
-        validate_path: str = "/p3/serviceValidate",
-    ) -> "CASClient":
-        return cls(
-            login_url=urllib.parse.urljoin(base_url, login_path),
-            logout_url=urllib.parse.urljoin(base_url, logout_path),
-            validate_url=urllib.parse.urljoin(base_url, validate_path),
-        )
-
-    def __repr__(self) -> str:
-        return (
-            "CASClient("
-            f"login_url={self.login_url!r}, "
-            f"logout_url={self.logout_url!r}, "
-            f"validate_url={self.validate_url!r}"
-            ")"
-        )
 
 
 def parse_cas_response(cas_response: str) -> CASUser:
@@ -178,3 +179,8 @@ def parse_cas_xml_error(root: xml.etree.ElementTree.Element) -> CASError:
         if error_code == "INVALID_SERVICE":
             return CASInvalidServiceError(error_code, error_text)
     return CASError(error_code)
+
+
+def _http_get(url: str, timeout: float = 10.0) -> str:
+    with urllib.request.urlopen(url, timeout=timeout) as f:
+        return f.read().decode(CAS_VALIDATE_ENCODING)
