@@ -45,52 +45,11 @@ class CASUser:
         return dataclasses.asdict(self)
 
 
-class CASClient:
-    def __init__(
-        self,
-        login_url: str,
-        logout_url: str,
-        validate_url: str,
-    ) -> None:
+class BaseCASClient:
+    def __init__(self, login_url: str, logout_url: str, validate_url: str) -> None:
         self.login_url = login_url
         self.logout_url = logout_url
         self.validate_url = validate_url
-
-    @classmethod
-    def from_base_url(
-        cls,
-        base_url: str,
-        *,
-        login_path: str = "/login",
-        logout_path: str = "/logout",
-        validate_path: str = "/p3/serviceValidate",
-    ) -> "CASClient":
-        return cls(
-            login_url=urllib.parse.urljoin(base_url, login_path),
-            logout_url=urllib.parse.urljoin(base_url, logout_path),
-            validate_url=urllib.parse.urljoin(base_url, validate_path),
-        )
-
-    def validate(
-        self,
-        service_url: str,
-        ticket: str,
-        *,
-        timeout: Optional[float] = None,
-        **kwargs: str,
-    ) -> CASUser:
-        if timeout is None:
-            timeout = CAS_VALIDATE_TIMEOUT
-        target_validate = self.build_validate_url(service_url, ticket, **kwargs)
-        logger.debug("Validating %s", target_validate)
-        try:
-            resp_data = _fetch_url(target_validate, timeout=timeout)
-            resp_text = resp_data.decode(CAS_VALIDATE_ENCODING)
-        except Exception as exc:
-            raise CASError(repr(exc)) from exc
-        else:
-            logger.debug("Response:\n%s", resp_text)
-            return parse_cas_response(resp_text)
 
     def build_login_url(
         self,
@@ -119,6 +78,52 @@ class CASClient:
         params = {"service": service, "ticket": ticket, **kwargs}
         qs = urllib.parse.urlencode(params)
         return f"{self.validate_url}?{qs}"
+
+
+class CASClient(BaseCASClient):
+    def __init__(
+        self,
+        login_url: str,
+        logout_url: str,
+        validate_url: str,
+    ) -> None:
+        super().__init__(login_url, logout_url, validate_url)
+
+    def validate(
+        self,
+        service_url: str,
+        ticket: str,
+        *,
+        timeout: Optional[float] = None,
+        **kwargs: str,
+    ) -> CASUser:
+        if timeout is None:
+            timeout = CAS_VALIDATE_TIMEOUT
+        target_validate = self.build_validate_url(service_url, ticket, **kwargs)
+        logger.debug("Validating %s", target_validate)
+        try:
+            resp_data = _fetch_url(target_validate, timeout=timeout)
+            resp_text = resp_data.decode(CAS_VALIDATE_ENCODING)
+        except Exception as exc:
+            raise CASError(repr(exc)) from exc
+        else:
+            logger.debug("Response:\n%s", resp_text)
+            return parse_cas_response(resp_text)
+
+    @classmethod
+    def from_base_url(
+        cls,
+        base_url: str,
+        *,
+        login_path: str = "/login",
+        logout_path: str = "/logout",
+        validate_path: str = "/p3/serviceValidate",
+    ) -> "CASClient":
+        return cls(
+            login_url=urllib.parse.urljoin(base_url, login_path),
+            logout_url=urllib.parse.urljoin(base_url, logout_path),
+            validate_url=urllib.parse.urljoin(base_url, validate_path),
+        )
 
     def __repr__(self) -> str:
         return (
