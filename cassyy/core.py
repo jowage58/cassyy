@@ -245,5 +245,4 @@ def _http_get(url: str, timeout: float = 10.0) -> str:
 
 
 async def _async_http_get(url: str, timeout: float = 10.0) -> str:
-    fut = asyncio.to_thread(_http_get, url, timeout)
-    return await asyncio.wait_for(fut, timeout)
+    return await asyncio.to_thread(_http_get, url, timeout)
