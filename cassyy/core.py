@@ -195,7 +195,7 @@ class AsyncCASClient(BaseCASClient):
 
 def parse_cas_response(cas_response: str) -> CASUser:
     try:
-        root = xml.etree.ElementTree.fromstring(cas_response)
+        root = xml.etree.ElementTree.fromstring(cas_response)  # noqa: S314
     except Exception as exc:
         raise CASError("INVALID_RESPONSE", repr(exc)) from exc
     else:
@@ -239,7 +239,7 @@ def parse_cas_xml_error(root: xml.etree.ElementTree.Element) -> CASError:
 
 
 def _http_get(url: str, timeout: float = 10.0) -> str:
-    with urllib.request.urlopen(url, timeout=timeout) as f:
+    with urllib.request.urlopen(url, timeout=timeout) as f:  # noqa: S310
         data = cast(bytes, f.read())
         return data.decode(CAS_VALIDATE_ENCODING)
 
