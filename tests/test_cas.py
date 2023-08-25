@@ -91,6 +91,21 @@ class CASClientTestCase(unittest.TestCase):
             f"{self.cas_login_url}?service=https%3A%2F%2Ffoo.org&method=POST", url
         )
 
+    def test_build_login_url_with_renew(self):
+        url = self.client.build_login_url(self.test_service_url, renew=True)
+        self.assertEqual(
+            f"{self.cas_login_url}?service=https%3A%2F%2Ffoo.org&renew=true", url
+        )
+
+    def test_build_login_url_with_renew_and_postback(self):
+        url = self.client.build_login_url(
+            self.test_service_url, callback_post=True, renew=True
+        )
+        self.assertEqual(
+            f"{self.cas_login_url}?service=https%3A%2F%2Ffoo.org&method=POST&renew=true",
+            url,
+        )
+
     def test_build_validate_url(self):
         url = self.client.build_validate_url(self.test_service_url, "tix")
         self.assertEqual(

@@ -12,7 +12,7 @@ from .core import (
     CASUser,
 )
 
-__version__ = "0.0.8.dev"
+__version__ = "0.0.8"
 
 __all__ = [
     "AsyncCASClient",
