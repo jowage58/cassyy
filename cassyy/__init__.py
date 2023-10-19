@@ -1,6 +1,7 @@
 """
 Simple Apereo Central Authentication Service (CAS) client
 """
+
 import logging as _logging
 
 from .core import (

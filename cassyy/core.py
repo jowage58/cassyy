@@ -1,6 +1,7 @@
 """
 Central Authentication Service (CAS) client
 """
+
 import asyncio
 import dataclasses
 import logging
