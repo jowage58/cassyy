@@ -8,7 +8,7 @@ import urllib.parse
 import urllib.request
 import xml.etree.ElementTree
 from collections.abc import Awaitable, Callable
-from typing import Optional, Union, cast
+from typing import cast
 
 logger = logging.getLogger(__name__)
 
@@ -21,27 +21,27 @@ AsyncHTTPGetFunc = Callable[[str, float], Awaitable[str]]
 
 
 class CASError(Exception):
-    def __init__(self, error_code: str, *args: Optional[str]) -> None:
+    def __init__(self, error_code: str, *args: str | None) -> None:
         super().__init__(error_code, *args)
         self.error_code = error_code
 
 
 class CASInvalidServiceError(CASError):
-    def __init__(self, *args: Optional[str]) -> None:
+    def __init__(self, *args: str | None) -> None:
         super().__init__("INVALID_SERVICE", *args)
 
 
 class CASInvalidTicketError(CASError):
-    def __init__(self, *args: Optional[str]) -> None:
+    def __init__(self, *args: str | None) -> None:
         super().__init__("INVALID_TICKET", *args)
 
 
 @dataclasses.dataclass
 class CASUser:
     userid: str
-    attributes: dict[str, Optional[str]] = dataclasses.field(default_factory=dict)
+    attributes: dict[str, str | None] = dataclasses.field(default_factory=dict)
 
-    def asdict(self) -> dict[str, Union[str, dict[str, str]]]:
+    def asdict(self) -> dict[str, str | dict[str, str]]:
         return dataclasses.asdict(self)
 
 
@@ -67,7 +67,7 @@ class BaseCASClient:
         qs = urllib.parse.urlencode(params)
         return f"{self.login_url}?{qs}"
 
-    def build_logout_url(self, service: Optional[str] = None, **kwargs: str) -> str:
+    def build_logout_url(self, service: str | None = None, **kwargs: str) -> str:
         if service is None:
             if not kwargs:
                 return self.logout_url
@@ -98,7 +98,7 @@ class CASClient(BaseCASClient):
         login_url: str,
         logout_url: str,
         validate_url: str,
-        http_get_func: Optional[HTTPGetFunc] = None,
+        http_get_func: HTTPGetFunc | None = None,
     ) -> None:
         super().__init__(login_url, logout_url, validate_url)
         if http_get_func is None:
@@ -114,7 +114,7 @@ class CASClient(BaseCASClient):
         login_path: str = "/login",
         logout_path: str = "/logout",
         validate_path: str = "/p3/serviceValidate",
-        http_get_func: Optional[HTTPGetFunc] = None,
+        http_get_func: HTTPGetFunc | None = None,
     ) -> "CASClient":
         return cls(
             login_url=urllib.parse.urljoin(base_url, login_path),
@@ -128,7 +128,7 @@ class CASClient(BaseCASClient):
         service_url: str,
         ticket: str,
         *,
-        timeout: Optional[float] = None,
+        timeout: float | None = None,
         **kwargs: str,
     ) -> CASUser:
         if timeout is None:
@@ -150,7 +150,7 @@ class AsyncCASClient(BaseCASClient):
         login_url: str,
         logout_url: str,
         validate_url: str,
-        http_get_func: Optional[AsyncHTTPGetFunc] = None,
+        http_get_func: AsyncHTTPGetFunc | None = None,
     ) -> None:
         super().__init__(login_url, logout_url, validate_url)
         if http_get_func is None:
@@ -166,7 +166,7 @@ class AsyncCASClient(BaseCASClient):
         login_path: str = "/login",
         logout_path: str = "/logout",
         validate_path: str = "/p3/serviceValidate",
-        http_get_func: Optional[AsyncHTTPGetFunc] = None,
+        http_get_func: AsyncHTTPGetFunc | None = None,
     ) -> "AsyncCASClient":
         return cls(
             login_url=urllib.parse.urljoin(base_url, login_path),
@@ -180,7 +180,7 @@ class AsyncCASClient(BaseCASClient):
         service_url: str,
         ticket: str,
         *,
-        timeout: Optional[float] = None,
+        timeout: float | None = None,
         **kwargs: str,
     ) -> CASUser:
         if timeout is None:
@@ -215,7 +215,7 @@ def parse_cas_xml(root: xml.etree.ElementTree.Element) -> CASUser:
 
 def parse_cas_xml_user(
     user_elem: xml.etree.ElementTree.Element,
-    attr_elem: Optional[xml.etree.ElementTree.Element],
+    attr_elem: xml.etree.ElementTree.Element | None,
 ) -> CASUser:
     if user_elem.text is None:
         raise CASError("USERNAME_NOT_IN_RESPONSE")
