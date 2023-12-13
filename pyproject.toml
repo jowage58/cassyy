@@ -20,9 +20,6 @@ dynamic = ["version", "description"]
 Home = "https://github.com/jowage58/cassyy"
 Source = "https://github.com/jowage58/cassyy"
 
-[tool.black]
-target-version = ["py310"]
-
 [tool.mypy]
 packages = "cassyy"
 strict = true
