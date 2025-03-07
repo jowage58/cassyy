@@ -129,11 +129,14 @@ class CASClient(BaseCASClient):
         service_url: str,
         ticket: str,
         *,
+        renew: bool = False,
         timeout: float | None = None,
         **kwargs: str,
     ) -> CASUser:
         if timeout is None:
             timeout = CAS_VALIDATE_TIMEOUT
+        if renew and "renew" not in kwargs:
+            kwargs["renew"] = "true"
         target_validate = self.build_validate_url(service_url, ticket, **kwargs)
         logger.debug("Validating %s", target_validate)
         try:
@@ -181,11 +184,14 @@ class AsyncCASClient(BaseCASClient):
         service_url: str,
         ticket: str,
         *,
+        renew: bool = False,
         timeout: float | None = None,
         **kwargs: str,
     ) -> CASUser:
         if timeout is None:
             timeout = CAS_VALIDATE_TIMEOUT
+        if renew and "renew" not in kwargs:
+            kwargs["renew"] = "true"
         target_validate = self.build_validate_url(service_url, ticket, **kwargs)
         logger.debug("Validating %s", target_validate)
         try:
