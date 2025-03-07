@@ -61,9 +61,9 @@ class BaseCASClient:
         **kwargs: str,
     ) -> str:
         params = {"service": service, **kwargs}
-        if callback_post and "method" not in kwargs:
+        if callback_post and "method" not in params:
             params["method"] = "POST"
-        if renew and "renew" not in kwargs:
+        if renew and "renew" not in params:
             params["renew"] = "true"
         qs = urllib.parse.urlencode(params)
         return f"{self.login_url}?{qs}"
