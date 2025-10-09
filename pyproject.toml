@@ -23,7 +23,7 @@ Source = "https://github.com/jowage58/cassyy"
 
 [dependency-groups]
 dev = [
-    "mypy>=1.16.0",
+    "mypy>=1.18.2",
 ]
 
 [tool.mypy]
