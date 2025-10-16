@@ -18,5 +18,8 @@ fi
 mypy --version
 mypy
 
+ty --version
+ty check
+
 python -VV
 python -m unittest
