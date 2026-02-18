@@ -29,7 +29,7 @@ Source = "https://github.com/jowage58/cassyy"
 [dependency-groups]
 dev = [
     "mypy>=1.19.1",
-    "ty>=0.0.15",
+    "ty>=0.0.17",
 ]
 
 [tool.mypy]
