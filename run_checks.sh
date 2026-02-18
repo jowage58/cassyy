@@ -15,9 +15,6 @@ if [[ $CI != "true" ]]; then
     pre-commit run --all-files
 fi
 
-mypy --version
-mypy
-
 ty --version
 ty check
 

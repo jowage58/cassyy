@@ -28,15 +28,8 @@ Source = "https://github.com/jowage58/cassyy"
 
 [dependency-groups]
 dev = [
-    "mypy>=1.19.1",
     "ty>=0.0.17",
 ]
-
-[tool.mypy]
-python_version = "3.12"
-packages = "cassyy"
-strict = true
-warn_unreachable = true
 
 [tool.ruff]
 target-version = "py312"
