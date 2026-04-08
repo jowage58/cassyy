@@ -1,5 +1,5 @@
 [build-system]
-requires = ["uv_build>=0.10.0,<0.11.0"]
+requires = ["uv_build>=0.11.0,<0.12.0"]
 build-backend = "uv_build"
 
 [tool.uv.build-backend]
@@ -8,15 +8,14 @@ module-root = ""
 
 [project]
 name = "cassyy"
-version = "0.0.10.dev0"
+version = "1.0.0"
 description = "Simple Apereo Central Authentication Service (CAS) client"
 authors = [{name = "John Wagenleitner", email = "johnwa@mail.fresnostate.edu"}]
 readme = "README.md"
 license = {file = "LICENSE"}
 keywords = ["Authentication", "SSO", "CAS"]
 classifiers = [
-    "Development Status :: 4 - Beta",
-    "License :: OSI Approved :: Apache Software License",
+    "Development Status :: 5 - Production/Stable",
     "Intended Audience :: Developers",
 ]
 requires-python = ">=3.12"
@@ -28,7 +27,7 @@ Source = "https://github.com/jowage58/cassyy"
 
 [dependency-groups]
 dev = [
-    "ty>=0.0.17",
+    "ty>=0.0.29",
 ]
 
 [tool.ruff]
