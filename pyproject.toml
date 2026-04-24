@@ -27,7 +27,8 @@ Source = "https://github.com/jowage58/cassyy"
 
 [dependency-groups]
 dev = [
-    "ty>=0.0.29",
+    "pytest>=9.0.3",
+    "ty>=0.0.32",
 ]
 
 [tool.ruff]
@@ -55,6 +56,7 @@ extend-select = [
     "PERF",  # perflint
     "PIE",  # misc lints
     "PL",  # Pylint
+    "PT",  # pytest
     "PTH",  # pathlib
     "RET",  # returns
     "RSE",  # raises
@@ -69,7 +71,7 @@ extend-select = [
 ignore = ["ASYNC109", "ISC001"]
 
 [tool.ruff.lint.per-file-ignores]
-"tests/test_cas.py" = ["E501"]
+"tests/**/*.py" = ["E501", "S101"]
 
 [tool.ruff.lint.pylint]
 max-args = 8

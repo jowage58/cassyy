@@ -18,5 +18,4 @@ fi
 ty --version
 ty check
 
-python -VV
-python -m unittest
+pytest -p no:cacheprovider
