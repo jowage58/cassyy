@@ -1,21 +1,8 @@
 #!/usr/bin/env bash
 set -xe
 
-if [[ $1 == "clean" ]]; then
-    echo "cleaning out .*cache/ directories"
-    rm -rf .*cache/
-fi
+export UV_FROZEN=1
 
-if [[ -d .venv/bin ]]; then
-    export PATH=.venv/bin:$PATH
-fi
-
-echo "CI is set to [${CI}]"
-if [[ $CI != "true" ]]; then
-    pre-commit run --all-files
-fi
-
-ty --version
-ty check
-
-pytest -p no:cacheprovider
+uv run --active prek run --all-files
+uv run --active ty check
+uv run --active pytest -p no:cacheprovider
