@@ -248,11 +248,11 @@ def parse_cas_xml_error(root: xml.etree.ElementTree.Element) -> CASError:
     return CASError(error_code)
 
 
-def _http_get(url: str, timeout: float = 10.0) -> str:
+def _http_get(url: str, timeout: float = CAS_VALIDATE_TIMEOUT) -> str:
     with urllib.request.urlopen(url, timeout=timeout) as f:  # noqa: S310
         data = cast(bytes, f.read())
         return data.decode(CAS_VALIDATE_ENCODING)
 
 
-async def _async_http_get(url: str, timeout: float = 10.0) -> str:
+async def _async_http_get(url: str, timeout: float = CAS_VALIDATE_TIMEOUT) -> str:
     return await asyncio.to_thread(_http_get, url, timeout)

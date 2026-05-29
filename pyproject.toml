@@ -8,7 +8,7 @@ module-root = ""
 
 [project]
 name = "cassyy"
-version = "1.0.0"
+version = "1.0.1"
 description = "Simple Apereo Central Authentication Service (CAS) client"
 authors = [{name = "John Wagenleitner", email = "johnwa@mail.fresnostate.edu"}]
 readme = "README.md"
