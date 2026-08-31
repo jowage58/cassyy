@@ -18,12 +18,14 @@ about the user.
 ```python
 import cassyy
 
-cas_client = cassyy.CASClient.from_base_url('https://cas.example.org')
+cas_client = cassyy.CASClient.from_base_url("https://cas.example.org")
+
 
 def login_route(request, response):
     redirect_url = ...
     target_url = cas_client.build_login_url(redirect_url)
     response.redirect(target_url)
+
 
 # This could be a route or some authentication middleware that intercepts
 # unauthenticated requests and redirects to CAS and/or validates a CAS ticket
@@ -32,7 +34,8 @@ def validate_route(request, response):
     ticket = ...  # pull from request
     service_url = ...
     cas_user = cas_client.validate(service_url, ticket)
-    request.session['user'] = cas_user.asdict()
+    request.session["user"] = cas_user.asdict()
+
 
 def logout_route(request, response):
     # where to have CAS redirect back to the app after the CAS logout occurs,
