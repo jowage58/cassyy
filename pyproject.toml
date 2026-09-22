@@ -27,9 +27,9 @@ Source = "https://github.com/jowage58/cassyy"
 
 [dependency-groups]
 dev = [
-    "prek>=0.5.0",
+    "prek>=0.5.3",
     "pytest>=9.1.1",
-    "ty>=0.0.76",
+    "ty>=0.0.83",
 ]
 
 [tool.ruff]
